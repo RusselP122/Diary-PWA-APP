@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Journal PWA</title>
+    <meta name="theme-color" content="#2F4858">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background-color: #2F4858;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .container {
+            margin: 100px auto 20px;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        .entry-textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            resize: vertical;
+        }
+
+        .mood-selector {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .mood-btn {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 2px solid #ddd;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mood-btn.selected {
+            border-color: #00A878;
+            background-color: #00A878;
+            color: white;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .entry-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .entry-card:hover .entry-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+
+        .edit-btn {
+            background-color: #FFD700;
+            color: #333;
+        }
+
+        .delete-btn {
+            background-color: #FF4444;
+            color: white;
+        }
+
+        .stats-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .dark-mode {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .dark-mode .entry-card,
+        .dark-mode .stats-container {
+            background-color: #2d2d2d;
+            color: #ffffff;
+        }
+
+        .dark-mode .entry-textarea,
+        .dark-mode .search-input {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            border-color: #444;
+        }
+
+        .dark-mode .entry-date {
+            color: #aaa;
+        }
+
+        .save-button {
+            background-color: #00A878;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            float: right;
+        }
+
+        .save-button:hover {
+            background-color: #008C62;
+        }
+
+        .save-button:active {
+            transform: scale(0.95);
+        }
+
+        .entries-container {
+            margin-top: 40px;
+        }
+
+        .entry-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .entry-date {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .entry-content {
+            line-height: 1.6;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #00A878;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 900;
+        }
+
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 100px;
+            background-color: #2F4858;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border: none;
+            z-index: 900;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 80px 15px 20px;
+            }
+            
+            .fab, .dark-mode-toggle {
+                bottom: 20px;
+            }
+            
+            .dark-mode-toggle {
+                right: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>📖 Daily Journal</h1>
+    </header>
+
+    <div class="container">
+        <!-- Add search -->
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search entries..." oninput="searchEntries(this.value)">
+            <span class="search-icon">🔍</span>
+        </div>
+
+        <!-- Add stats -->
+        <div class="stats-container">
+            <h3>📊 Journal Stats</h3>
+            <p>Total Entries: <span id="totalEntries">0</span></p>
+            <p>Characters Written: <span id="totalChars">0</span></p>
+        </div>
+
+        <textarea class="entry-textarea" placeholder="How was your day? Write your thoughts here..."></textarea>
+        
+        <div class="mood-selector" id="moodSelector">
+            <button class="mood-btn" data-mood="😊" onclick="selectMood(this)">😊 Good</button>
+            <button class="mood-btn" data-mood="😐" onclick="selectMood(this)">😐 Neutral</button>
+            <button class="mood-btn" data-mood="😞" onclick="selectMood(this)">😞 Tough</button>
+        </div>
+        
+        <button class="save-button" id="saveButton" onclick="saveEntry()">Save Entry</button>
+        
+        <div class="entries-container" id="entries">
+            <!-- Entries will be loaded here -->
+        </div>
+    </div>
+
+    <div class="fab" onclick="scrollToTextarea()">✎</div>
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌓</button>
+
+    <script>
+        let currentMood = null;
+        let darkMode = localStorage.getItem('darkMode') === 'true';
+        let currentEditId = null;
+
+        // Initialize dark mode
+        document.body.classList.toggle('dark-mode', darkMode);
+
+        function saveEntry() {
+            const textarea = document.querySelector('.entry-textarea');
+            const entry = textarea.value.trim();
+            const saveButton = document.getElementById('saveButton');
+            
+            if(entry) {
+                let entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+                
+                if(currentEditId !== null) {
+                    // We're editing an existing entry
+                    const entryIndex = entries.findIndex(e => e.id == currentEditId);
+                    
+                    if(entryIndex !== -1) {
+                        // Update the existing entry
+                        entries[entryIndex].content = entry;
+                        entries[entryIndex].mood = currentMood;
+                        entries[entryIndex].lastEdited = new Date().toLocaleString();
+                    }
+                    
+                    // Reset edit mode
+                    currentEditId = null;
+                    saveButton.textContent = "Save Entry";
+                } else {
+                    // We're creating a new entry
+                    const entryData = {
+                        content: entry,
+                        date: new Date().toLocaleString(),
+                        mood: currentMood,
+                        id: Date.now()
+                    };
+                    entries.unshift(entryData);
+                }
+                
+                localStorage.setItem('journalEntries', JSON.stringify(entries));
+
+                textarea.value = '';
+                currentMood = null;
+                document.querySelectorAll('.mood-btn').forEach(btn => 
+                    btn.classList.remove('selected'));
+                
+                loadEntries();
+                updateStats();
+            }
+        }
+
+        function loadEntries() {
+            const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+            displayEntries(entries);
+            updateStats();
+        }
+
+        function displayEntries(entries) {
+            const entriesContainer = document.getElementById('entries');
+            entriesContainer.innerHTML = '';
+            entries.forEach(entry => {
+                entriesContainer.appendChild(createEntryCard(entry));
+            });
+        }
+
+        function createEntryCard(entry) {
+            const card = document.createElement('div');
+            card.className = 'entry-card';
+            
+            // Format the date display with edit information if available
+            let dateDisplay = entry.date;
+            if (entry.lastEdited) {
+                dateDisplay += ` (edited: ${entry.lastEdited})`;
+            }
+            
+            card.innerHTML = `
+                <div class="entry-date">${dateDisplay} ${entry.mood || ''}</div>
+                <div class="entry-content">${entry.content}</div>
+                <div class="entry-actions">
+                    <button class="action-btn edit-btn" onclick="editEntry(${entry.id})">✏️ Edit</button>
+                    <button class="action-btn delete-btn" onclick="deleteEntry(${entry.id})">🗑️ Delete</button>
+                </div>
+            `;
+            return card;
+        }
+
+        function selectMood(btn) {
+            document.querySelectorAll('.mood-btn').forEach(b => 
+                b.classList.remove('selected'));
+            btn.classList.add('selected');
+            currentMood = btn.dataset.mood;
+        }
+
+        function editEntry(id) {
+            const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+            const entry = entries.find(e => e.id == id);
+            
+            if (entry) {
+                const textarea = document.querySelector('.entry-textarea');
+                const saveButton = document.getElementById('saveButton');
+                
+                // Set current edit ID
+                currentEditId = id;
+                
+                // Change save button text
+                saveButton.textContent = "Update Entry";
+                
+                // Fill textarea with entry content
+                textarea.value = entry.content;
+                
+                // Select the mood if one exists
+                currentMood = entry.mood;
+                document.querySelectorAll('.mood-btn').forEach(btn => {
+                    btn.classList.toggle('selected', btn.dataset.mood === entry.mood);
+                });
+                
+                // Scroll to textarea
+                textarea.focus();
+                scrollToTextarea();
+            }
+        }
+
+        function deleteEntry(id) {
+            if(confirm('Are you sure you want to delete this entry?')) {
+                let entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+                entries = entries.filter(e => e.id != id);
+                localStorage.setItem('journalEntries', JSON.stringify(entries));
+                
+                // If we were editing this entry, reset edit mode
+                if (currentEditId == id) {
+                    currentEditId = null;
+                    document.getElementById('saveButton').textContent = "Save Entry";
+                    document.querySelector('.entry-textarea').value = '';
+                    currentMood = null;
+                    document.querySelectorAll('.mood-btn').forEach(btn => 
+                        btn.classList.remove('selected'));
+                }
+                
+                loadEntries();
+                updateStats();
+            }
+        }
+
+        function searchEntries(query) {
+            const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+            const filtered = entries.filter(entry => 
+                entry.content.toLowerCase().includes(query.toLowerCase())
+            );
+            displayEntries(filtered);
+        }
+
+        function updateStats() {
+            const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+            document.getElementById('totalEntries').textContent = entries.length;
+            document.getElementById('totalChars').textContent = 
+                entries.reduce((sum, entry) => sum + entry.content.length, 0);
+        }
+
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            document.body.classList.toggle('dark-mode', darkMode);
+            localStorage.setItem('darkMode', darkMode);
+        }
+
+        function scrollToTextarea() {
+            document.querySelector('.entry-textarea').scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+
+        // Initialize service worker
+        if('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+        // Load entries when the page loads
+        document.addEventListener('DOMContentLoaded', loadEntries);
+    </script>
+</body>
+</html>
